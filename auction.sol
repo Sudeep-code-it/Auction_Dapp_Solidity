@@ -10,16 +10,27 @@ contract biddingsystem{
 
     uint sTime=block.timestamp;
     uint eTime;
+    address owner;
+    constructor(){
+        owner=msg.sender;
+    }
+    modifier onlyowner{
+        require(msg.sender==owner,"Only owner can do this task");
+        _;
+    }
 
     function putBid() public payable{
         require(block.timestamp<=eTime,"Bid Time Over, Thank You");
         require(msg.value>0,"Bid shoulb be greater than zero");
         bidderdata[msg.sender]=bidderdata[msg.sender]+msg.value;
-        require(bidderdata[msg.sender]>highestbid,"Your total bid is less than the highest bid");
 
         if(bidderdata[msg.sender]>highestbid)
         {highestbid=bidderdata[msg.sender];
         highestbidder=msg.sender;
+        }
+        else
+        {
+            getBackTheBid(payable(msg.sender), bidderdata[msg.sender]);
         }
         
     }
@@ -33,14 +44,13 @@ contract biddingsystem{
     }
    
 
-    function setEndTimeInDays(uint _days) public{
+    function setEndTimeInDays(uint _days) public onlyowner{
         eTime=sTime+(_days*24*60*60);
     }
 
-    function getBackTheBid(address payable _addr) public
+    function getBackTheBid(address payable _addr,uint _val) internal
     {
-    require(bidderdata[_addr]!=0,"You do not have any bid");
-    require(highestbidder!=_addr,"You can not get back the bid as ur the highest bidder");
-    _addr.transfer(bidderdata[_addr]);
+    
+    _addr.transfer(_val);
     }
 }
